@@ -1,6 +1,36 @@
 version: '3.8'
 
 services:
+  backend:
+    build: ./backend
+    container_name: sheets-sync-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=sync_user
+      - MYSQL_PASSWORD=sync_password
+      - MYSQL_DATABASE=sheets_sync
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Pass these securely in production via .env
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sync-network
+
   mysql:
     image: mysql:8.0
     platform: linux/amd64
