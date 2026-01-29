@@ -18,7 +18,7 @@ Directly connecting a user-facing interface (Sheets) to a database is fragile; t
 ## 💎 Technical Nuances & Edge Cases
 *How I handled the tricky parts.*
 
-### 1. Avoiding Infinite Update Loops
+### 1. Avoiding Infinite Update Loops ✅
 
 Two-way sync can easily cause an endless loop: a Sheet update writes to the DB, which then writes back to the Sheet again.
 
@@ -28,7 +28,7 @@ This breaks the loop immediately at the entry point.
 
 ---
 
-### 2. Handling Copy-Paste and Bulk Edits
+### 2. Handling Copy-Paste and Bulk Edits ✅
 
 Apps Script triggers often return `null` values during pastes or deletions, which can lead to missed updates.
 
@@ -37,7 +37,7 @@ This reliably captures bulk pastes, dates, and formatted values.
 
 ---
 
-### 3. Concurrency and Simultaneous Edits
+### 3. Concurrency and Simultaneous Edits ✅
 
 When many users edit at the same time, direct DB writes can cause conflicts and dirty reads.
 
@@ -46,7 +46,7 @@ A worker then processes them sequentially, preserving order and data integrity.
 
 ---
 
-### 4. Restricting Script Permissions
+### 4. Restricting Script Permissions ✅
 
 Overly broad script permissions increase security risk.
 
@@ -55,7 +55,7 @@ Nothing else is accessible.
 
 ---
 
-### 5. Secure Credential Management
+### 5. Secure Credential Management ✅
 
 Hardcoding secrets is unsafe and hard to maintain.
 
@@ -84,7 +84,7 @@ For a deeper breakdown of the database schema, worker logic, and internal data f
 
 ---
 
-## 💻 Tech Stack
+## 💎 Tech Stack
 
 Each layer of the system was chosen for **predictability, debuggability, and long-running reliability**.
 
@@ -96,7 +96,7 @@ Each layer of the system was chosen for **predictability, debuggability, and lon
 
 ---
 
-## 🛠️ Setup & Installation
+## 💎 Setup & Installation
 
 The project is intentionally designed to be **locally reproducible** with minimal friction.
 
