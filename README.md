@@ -51,52 +51,95 @@ Directly connecting a user-facing interface (Sheets) to a database is fragile; t
 
 ## 🏗️ Architecture
 
+At a high level, the system is designed to safely synchronize **high-frequency Google Sheet edits** with a relational database, while preventing feedback loops and race conditions.
+
 ```mermaid
 graph LR
-    A[Google Sheet] -- Webhook (ngrok) --> B(Node.js API)
+    A[Google Sheet] -- Webhook (ngrok) --> B[Node.js API]
     B -- Push Job --> C{Redis Queue}
     C -- Process Job --> D[Sync Worker]
     D -- Write/Update --> E[(MySQL Database)]
     E -- Change Event --> D
     D -- Update Row --> A
-📐 Deep Dive: For a detailed breakdown of the database schema, worker logic, and data flow diagrams, please refer to ARCHITECTURE.md.
+````
 
-💻 Tech Stack
-* Runtime: Node.js (TypeScript)
-* Database: MySQL (Persistent Storage)
-* Queue System: Redis (Event Buffering)
-* Frontend: HTML5, Tailwind CSS, Vanilla JS (Mission Control Dashboard)
-* Infrastructure: Docker, Ngrok (Tunneling)
+📐 **Deep Dive**
+For a deeper breakdown of the database schema, worker logic, and internal data flow, refer to `ARCHITECTURE.md`.
 
-🛠️ Setup & Installation
-1. Prerequisites
+---
+
+## 💻 Tech Stack
+
+Each layer of the system was chosen for **predictability, debuggability, and long-running reliability**.
+
+* **Runtime:** Node.js (TypeScript)
+* **Database:** MySQL (Persistent Storage)
+* **Queue System:** Redis (Event Buffering)
+* **Frontend:** HTML5, Tailwind CSS, Vanilla JS (Mission Control Dashboard)
+* **Infrastructure:** Docker, Ngrok (Tunneling)
+
+---
+
+## 🛠️ Setup & Installation
+
+The project is intentionally designed to be **locally reproducible** with minimal friction.
+
+---
+
+### Prerequisites
+
 * Node.js (v18+)
-* Docker Desktop (for Redis/MySQL)
-2. Installation
-Bash
+* Docker Desktop (for Redis & MySQL)
 
-git clone [https://github.com/yourusername/sheetql-sync.git](https://github.com/yourusername/sheetql-sync.git)
+---
+
+### Installation
+
+```bash
+git clone https://github.com/yourusername/sheetql-sync.git
 cd sheetql-sync
 npm install
-3. Start Infrastructure
-Bash
+```
 
+---
+
+### Start Infrastructure
+
+```bash
 docker-compose up -d
-4. Configure Environment
-Create a .env file:
-Code snippet
+```
 
+---
+
+### Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```env
 PORT=3000
 MYSQL_HOST=localhost
 MYSQL_USER=root
 MYSQL_PASSWORD=root
 MYSQL_DB=sheets_db
 REDIS_URL=redis://localhost:6379
-5. Run the Engine
-Bash
+```
 
+---
+
+### Run the Engine
+
+```bash
 npm run dev
-6. Connect Google Sheet
-1. Open Extensions → Apps Script.
-2. Paste the script from src/google-script.js.
-3. Set an Installable Trigger (On Edit).
+```
+
+---
+
+### Connect Google Sheet
+
+1. Open **Extensions → Apps Script**
+2. Paste the script from `src/google-script.js`
+3. Create an **Installable Trigger** → **On Edit**
+
+```
+::contentReference[oaicite:0]{index=0}
+```
