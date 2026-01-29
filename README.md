@@ -16,36 +16,52 @@ Directly connecting a user-facing interface (Sheets) to a database is fragile; t
 ---
 
 ## 💎 Technical Nuances & Edge Cases
-*How I solved the hard problems of 2-way synchronization.*
+*How I handled the tricky parts.*
 
-### 1. The "Infinite Loop" Trap
-**Challenge:** A Sheet update triggers the DB, which updates the Sheet, triggering the DB again—forever.
-**✅ My Fix (Context-Aware Logic):** I implemented source-flagging. Every update carries a metadata tag.
-* `User Edit` → Triggers Sync.
-* `System Sync` → Ignored by the webhook.
-* **Result:** The loop is broken instantly at the source.
+### 1. Avoiding Infinite Update Loops
 
-### 2. The "Copy-Paste" Fragility
-**Challenge:** Standard Apps Script triggers (`e.value`) return `null` if a user pastes a range or deletes cells, causing data loss.
-**✅ My Fix (Robust Retrieval):** I utilized `range.getDisplayValue()` as a fallback.
-* **Result:** The script forces a read of the visible cell data, correctly capturing bulk pastes, dates, and currency formatting.
+Two-way sync can easily cause an endless loop: a Sheet update writes to the DB, which then writes back to the Sheet again.
 
-### 3. Concurrency & "Multiplayer" Race Conditions
-**Challenge:** If 100 users edit simultaneously, 100 API calls hit the DB at once, leading to dirty reads.
-**✅ My Fix (Redis Queues):**
-* **Serialization:** Webhooks are acknowledged instantly but processed asynchronously via a Redis Queue.
-* **Atomic Writes:** Database writes are performed sequentially by the worker, ensuring data integrity.
+To stop this, every update includes metadata about its source.  
+User edits trigger syncs, while system-generated updates are ignored by the webhook.  
+This breaks the loop immediately at the entry point.
 
-### 4. Manifest-Level Security
-**Challenge:** Over-permissive scripts are a security risk.
-**✅ My Fix (Scoped Permissions):** I configured `appsscript.json` to strictly limit scope.
-* `spreadsheets.currentonly`: Script can *only* access the active file, not the user's Drive.
-* `script.external_request`: Whitelisted access only to my backend API.
+---
+
+### 2. Handling Copy-Paste and Bulk Edits
+
+Apps Script triggers often return `null` values during pastes or deletions, which can lead to missed updates.
+
+As a fallback, the script reads the visible value directly from the edited range.  
+This reliably captures bulk pastes, dates, and formatted values.
+
+---
+
+### 3. Concurrency and Simultaneous Edits
+
+When many users edit at the same time, direct DB writes can cause conflicts and dirty reads.
+
+All incoming updates are first pushed into a Redis queue.  
+A worker then processes them sequentially, preserving order and data integrity.
+
+---
+
+### 4. Restricting Script Permissions
+
+Overly broad script permissions increase security risk.
+
+The Apps Script manifest is scoped to only the active spreadsheet and the backend API.  
+Nothing else is accessible.
+
+---
 
 ### 5. Secure Credential Management
-**Challenge:** Hardcoding API keys or DB passwords in the source code.
-**✅ My Fix (12-Factor App):** * All secrets injected via `.env` variables.
-* Incoming webhooks are validated via a custom `x-api-key` header to reject malicious scanners.
+
+Hardcoding secrets is unsafe and hard to maintain.
+
+All credentials are injected via environment variables.  
+Incoming webhooks are also validated using a custom `x-api-key` header.
+
 
 ---
 
@@ -143,3 +159,8 @@ npm run dev
 ```
 ::contentReference[oaicite:0]{index=0}
 ```
+
+## 🙏 Thank You
+
+Thanks for taking the time to explore this project.  
+If you’re reviewing this for learning, collaboration, or evaluation, I truly appreciate your attention and feedback—it helps make the system better.
