@@ -44,10 +44,11 @@ async function processJob(job: Job<SheetToDbJobData>): Promise<void> {
 
     await db.transaction(async (connection) => {
       type LastModifiedRow = RowDataPacket & { _last_modified_at: string | Date };
-      const [existingRows] = await connection.query<LastModifiedRow[]>(
+      const lastModifiedRows = await connection.query<LastModifiedRow[]>(
         `SELECT _last_modified_at FROM \`${tableName}\` WHERE _sheet_row_number = ? LIMIT 1`,
         [row]
       );
+      const existingRows = lastModifiedRows[0];
 
       if (existingRows.length > 0) {
         const existingTs = new Date(existingRows[0]._last_modified_at);
@@ -83,10 +84,11 @@ async function processJob(job: Job<SheetToDbJobData>): Promise<void> {
       );
 
       type SyncedRowPacket = RowDataPacket & SyncedRow;
-      const [rowAfter] = await connection.query<SyncedRowPacket[]>(
+      const syncedRows = await connection.query<SyncedRowPacket[]>(
         `SELECT * FROM \`${tableName}\` WHERE _sheet_row_number = ? LIMIT 1`,
         [row]
       );
+      const rowAfter = syncedRows[0];
 
       if (rowAfter.length > 0) {
         const { _row_hash: _ignored, ...hashable } = rowAfter[0] as Record<string, unknown>;

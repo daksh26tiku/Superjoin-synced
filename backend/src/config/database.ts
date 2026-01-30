@@ -1,4 +1,4 @@
-import mysql, { Pool, PoolConnection, ResultSetHeader } from 'mysql2/promise';
+import mysql, { Pool, PoolConnection, ResultSetHeader, RowDataPacket, OkPacket } from 'mysql2/promise';
 import { logger } from '../utils/logger';
 
 /**
@@ -112,7 +112,8 @@ class DatabaseManager {
     if (!this.pool) {
       throw new Error('Database pool not initialized. Call initialize() first.');
     }
-    return this.pool.getConnection();
+    const connection = await this.pool.getConnection();
+    return connection;
   }
 
   /**
@@ -131,7 +132,7 @@ class DatabaseManager {
     }
 
     try {
-      const [rows] = await this.pool.query(sql as any, params as any);
+      const [rows] = await this.pool.query(sql, params);
       return rows as T;
     } catch (error) {
       logger.error('Query execution failed', { sql, error });
@@ -146,14 +147,14 @@ class DatabaseManager {
   async execute(
     sql: string,
     params?: Record<string, unknown> | unknown[]
-  ): Promise<ResultSetHeader> {
+  ): Promise<OkPacket> {
     if (!this.pool) {
       throw new Error('Database pool not initialized. Call initialize() first.');
     }
 
     try {
-      const [result] = await this.pool.execute<ResultSetHeader>(sql, params);
-      return result;
+      const [result] = await this.pool.execute(sql, params);
+      return result as OkPacket;
     } catch (error) {
       logger.error('Execute failed', { sql, error });
       throw error;
