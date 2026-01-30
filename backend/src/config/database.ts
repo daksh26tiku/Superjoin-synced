@@ -40,7 +40,7 @@ class DatabaseManager {
       waitForConnections: true,
       enableKeepAlive: true,
       keepAliveInitialDelay: 10000,
-      ssl: {}, // Enable SSL for Aiven MySQL
+      ssl: process.env.MYSQL_CA_CERT ? { ca: process.env.MYSQL_CA_CERT } : {}, // Enable SSL for Aiven MySQL
     };
   }
 
