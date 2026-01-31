@@ -1,19 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 
-// Get the project root directory (go up from backend/public)
-const projectRoot = path.join(__dirname, '..');
-
 // Create public directory if it doesn't exist
-if (!fs.existsSync(path.join(projectRoot, 'public'))) {
-  fs.mkdirSync(path.join(projectRoot, 'public'), { recursive: true });
+if (!fs.existsSync(path.join(__dirname, 'public'))) {
+  fs.mkdirSync(path.join(__dirname, 'public'), { recursive: true });
 }
 
-// Copy all HTML files from current directory (backend/public) to public
-const htmlFiles = fs.readdirSync(__dirname).filter(file => file.endsWith('.html'));
+// Copy all HTML files from backend/public to public
+const sourceDir = path.join(__dirname, 'backend/public');
+const htmlFiles = fs.readdirSync(sourceDir).filter(file => file.endsWith('.html'));
+
 htmlFiles.forEach(file => {
-  const sourcePath = path.join(__dirname, file);
-  const destPath = path.join(projectRoot, 'public', file);
+  const sourcePath = path.join(sourceDir, file);
+  const destPath = path.join(__dirname, 'public', file);
   
   let content = fs.readFileSync(sourcePath, 'utf8');
   
