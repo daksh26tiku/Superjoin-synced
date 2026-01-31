@@ -78,6 +78,7 @@ class DbChangeWatcher {
     }
   }
 
+
   /**
    * Get all registered sheet-table mappings.
    */
@@ -85,8 +86,15 @@ class DbChangeWatcher {
     const rows = await db.query<SheetRegistry[]>(
       'SELECT sheet_id, sheet_name, mysql_table_name as table_name FROM sync_sheets WHERE sync_enabled = TRUE'
     );
+
+    logger.info('DbChangeWatcher poll: registered sheets', {
+      count: rows.length,
+      tables: rows.map(r => r.table_name),
+    });
+
     return rows;
   }
+
 
   /**
    * Find and process pending changes for a specific table.
@@ -116,9 +124,12 @@ class DbChangeWatcher {
          WHERE _sync_status = 'PENDING' 
          AND _last_modified_by = 'DATABASE'
          LIMIT 100`,
-      );
+      )
+
+        ;
 
       if (pendingRows.length === 0) {
+        logger.debug('No pending DB changes found for table', { table: table_name });
         return;
       }
 
@@ -173,12 +184,12 @@ class DbChangeWatcher {
   private columnIndexToLetter(index: number): string {
     let letter = '';
     let num = index;
-    
+
     while (num >= 0) {
       letter = String.fromCharCode(65 + (num % 26)) + letter;
       num = Math.floor(num / 26) - 1;
     }
-    
+
     return letter;
   }
 
