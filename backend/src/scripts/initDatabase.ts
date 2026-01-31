@@ -53,7 +53,11 @@ async function initializeDatabase(): Promise<void> {
     // Read the SQL initialization file
     const sqlFilePath = path.resolve(__dirname, '../../sql/init/001_init_schema.sql');
     console.log(`📄 Reading SQL file: ${sqlFilePath}`);
-    const sqlContent = readFileSync(sqlFilePath, 'utf-8');
+    let sqlContent = readFileSync(sqlFilePath, 'utf-8');
+
+    // Remove the entire DELIMITER block (CREATE EVENT) as it's not compatible
+    // Remove everything between "DELIMITER //" and "DELIMITER ;"
+    sqlContent = sqlContent.replace(/DELIMITER \/\/[\s\S]*?DELIMITER ;/gi, '');
 
     // Split SQL file into individual statements
     // Remove comments and split by semicolon
@@ -63,7 +67,7 @@ async function initializeDatabase(): Promise<void> {
       .join('\n')
       .split(';')
       .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0 && !stmt.startsWith('DELIMITER'));
+      .filter(stmt => stmt.length > 0);
 
     console.log(`📋 Found ${statements.length} SQL statements to execute\n`);
 
@@ -73,12 +77,12 @@ async function initializeDatabase(): Promise<void> {
 
     for (let i = 0; i < statements.length; i++) {
       const statement = statements[i];
-      
-      // Skip certain statements that might not be compatible
-      if (statement.includes('USE sheets_sync') || 
-          statement.includes('GRANT ALL PRIVILEGES') ||
-          statement.includes('CREATE EVENT') ||
-          statement.includes('SET GLOBAL event_scheduler')) {
+
+      // Skip certain statements that might not be compatible with Render/Aiven
+      if (statement.includes('USE sheets_sync') ||
+        statement.includes('GRANT ALL PRIVILEGES') ||
+        statement.includes('SET GLOBAL event_scheduler') ||
+        statement.trim() === '') {
         console.log(`⏭️  Skipping statement ${i + 1}: ${statement.substring(0, 50)}...`);
         skipCount++;
         continue;
@@ -86,14 +90,14 @@ async function initializeDatabase(): Promise<void> {
 
       try {
         await connection.query(statement);
-        
+
         // Extract table/entity name for better logging
         let entityName = 'unknown';
         if (statement.includes('CREATE TABLE')) {
           const match = statement.match(/CREATE TABLE.*?`?(\w+)`?/i);
           if (match) entityName = match[1];
         }
-        
+
         console.log(`✅ Statement ${i + 1}/${statements.length}: ${entityName}`);
         successCount++;
       } catch (error: any) {
