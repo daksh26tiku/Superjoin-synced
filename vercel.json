@@ -8,8 +8,20 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/backend/public/$1"
+      "src": "/dashboard.html",
+      "dest": "/backend/public/dashboard.html"
+    },
+    {
+      "src": "/test-simple.html",
+      "dest": "/backend/public/test-simple.html"
+    },
+    {
+      "src": "/dashboard-backup.html",
+      "dest": "/backend/public/dashboard-backup.html"
+    },
+    {
+      "src": "/",
+      "dest": "/backend/public/dashboard.html"
     }
   ]
 }
