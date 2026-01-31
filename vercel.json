@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/backend/public/dashboard.html"
+      "dest": "/backend/public/index.html"
     },
     {
       "src": "/dashboard",
