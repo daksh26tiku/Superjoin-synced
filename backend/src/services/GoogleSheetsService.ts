@@ -76,7 +76,7 @@ class GoogleSheetsService {
     if (serviceAccountPath) {
       // Resolve path relative to backend directory
       const resolvedPath = path.resolve(__dirname, '../../', serviceAccountPath);
-      logger.info('Using Google service account', { path: resolvedPath }); \
+      logger.info('Using Google service account', { path: resolvedPath });
       return new google.auth.GoogleAuth({
         keyFile: resolvedPath,
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
